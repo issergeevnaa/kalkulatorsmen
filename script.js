@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
         pvzList.forEach(function (pvz, index) {
             var option = document.createElement('option');
             option.value = index;
-            option.textContent = pvz.name + ' (' + pvz.rate + ' ₽)';
+            option.textContent = pvz.name; // Только название ПВЗ без ставки
             pvzSelect.appendChild(option);
         });
 
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function () {
         pvzList.forEach(function (pvz, idx) {
             var opt = document.createElement('option');
             opt.value = idx;
-            opt.textContent = pvz.name + ' (' + (pvz.rate + 100) + ' ₽)';
+            opt.textContent = pvz.name; // Только название ПВЗ без ставки
             select.appendChild(opt);
         });
 
@@ -250,8 +250,7 @@ document.addEventListener('DOMContentLoaded', function () {
     baseRateInput.addEventListener('input', calculateSalary);
     monthSelect.addEventListener('change', generateSchedule);
     firstShiftDay.addEventListener('input', generateSchedule);
-Используйте код с осторожностью.
-scheduleType.addEventListener('change', generateSchedule);
+    scheduleType.addEventListener('change', generateSchedule);
 hadDaysOff.addEventListener('change', function (e) {
 daysOffHint.style.display = e.target.checked ? 'block' : 'none';
 if (!e.target.checked) {
