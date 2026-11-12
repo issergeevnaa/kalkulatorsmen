@@ -1,533 +1,377 @@
-:root {
-    --bg-color: #f3f4f6;
-    --card-bg: #ffffff;
-    --text-main: #111827;
-    --text-muted: #6b7280;
-    --border-color: #e5e7eb;
-    --primary: #4f46e5;
-    --half1-color: #2563eb;
-    --half1-bg: #dbeafe;
-    --half2-color: #059669;
-    --half2-bg: #d1fae5;
-    --off-color: #dc2626;
-    --off-bg: #fee2e2;
-    --holiday-color: #b45309;
-    --holiday-bg: #fef3c7;
-    --short-color: #6d28d9;
-    --short-bg: #ede9fe;
-}
+document.addEventListener('DOMContentLoaded', function () {
+    var pvzList = [
+        { name: "Бульвар Великой Победы 13", rate: 1500 },
+        { name: "Индустриальная 12 б", rate: 2000 },
+        { name: "Мира 8А", rate: 1800 },
+        { name: "Ленинградская 1В", rate: 1800 },
+        { name: "Бульвар Великой Победы 45", rate: 1800 },
+        { name: "Маршала Кошевого 23в", rate: 1800 },
+        { name: "Энтузиастов 14", rate: 1800 },
+        { name: "Энтузиастов 19", rate: 1800 },
+        { name: "Черникова 1Б", rate: 1800 },
+        { name: "Курчатова 35а", rate: 1800 }
+    ];
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+    var holidaysMap = {
+        "1-2": "2 января",
+        "1-7": "7 января",
+        "2-23": "23 февраля",
+        "3-8": "8 марта",
+        "5-1": "1 мая",
+        "5-9": "9 мая",
+        "6-12": "12 июня",
+        "11-4": "4 ноября",
+        "12-31": "31 декабря"
+    };
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-main);
-    line-height: 1.5;
-    padding: 20px;
-}
+    var scheduledDays = new Set();
+    var skippedDays = new Set();
+    var extraDays = new Set();
+    var shortDays = new Set();
 
-.container {
-    max-width: 1120px;
-    margin: 0 auto;
-}
+    var pvzSelect = document.getElementById('pvzSelect');
+    var baseRateInput = document.getElementById('baseRate');
+    var monthSelect = document.getElementById('monthSelect');
+    var firstShiftDay = document.getElementById('firstShiftDay');
+    var scheduleType = document.getElementById('scheduleType');
 
-header {
-    text-align: center;
-    margin-bottom: 24px;
-}
+    var hadDaysOff = document.getElementById('hadDaysOff');
+    var daysOffHint = document.getElementById('daysOffHint');
+    var halfShiftMode = document.getElementById('halfShiftMode');
+    var halfShiftHint = document.getElementById('halfShiftHint');
+    var resetScheduleBtn = document.getElementById('resetScheduleBtn');
+    var calendarGrid = document.getElementById('calendarGrid');
 
-header h1 {
-    font-size: 26px;
-    font-weight: 700;
-}
+    var enableSubs = document.getElementById('enableSubs');
+    var subsSection = document.getElementById('subsSection');
+    var subsList = document.getElementById('subsList');
+    var addSubBtn = document.getElementById('addSubBtn');
 
-.subtitle {
-    color: var(--text-muted);
-    font-size: 14px;
-    margin-top: 4px;
-}
-
-.main-grid {
-    display: grid;
-    grid-template-columns: 1.15fr 0.85fr;
-    gap: 24px;
-    align-items: start;
-}
-
-@media (max-width: 880px) {
-    .main-grid {
-        grid-template-columns: 1fr;
+    function isHoliday(month, day) {
+        return Object.prototype.hasOwnProperty.call(holidaysMap, month + '-' + day);
     }
-}
 
-.right-column {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
+    function init() {
+        pvzList.forEach(function (pvz, index) {
+            var option = document.createElement('option');
+            option.value = index;
+            option.textContent = pvz.name;
+            pvzSelect.appendChild(option);
+        });
 
-.card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 24px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
+        var now = new Date();
+        var year = now.getFullYear();
+        var month = String(now.getMonth() + 1).padStart(2, '0');
+        monthSelect.value = year + '-' + month;
 
-.card h2 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 16px;
-}
+        baseRateInput.value = pvzList.at(0).rate;
 
-.form-row {
-    display: flex;
-    gap: 14px;
-    margin-bottom: 16px;
-}
-
-.three-cols {
-    display: grid;
-    grid-template-columns: 1.2fr 0.8fr 1fr;
-    gap: 12px;
-}
-
-@media (max-width: 540px) {
-    .form-row, .three-cols {
-        display: flex;
-        flex-direction: column;
+        generateSchedule();
     }
-    .rate-group {
-        max-width: 100%;
+
+    function generateSchedule() {
+        scheduledDays.clear();
+        skippedDays.clear();
+        extraDays.clear();
+        shortDays.clear();
+
+        if (!monthSelect.value) return;
+
+        var parts = monthSelect.value.split('-');
+        var year = parseInt(parts.at(0), 10);
+        var month = parseInt(parts.at(1), 10);
+        var daysInMonth = new Date(year, month, 0).getDate();
+
+        var startDay = parseInt(firstShiftDay.value, 10) || 1;
+        if (startDay < 1) startDay = 1;
+        if (startDay > daysInMonth) startDay = daysInMonth;
+
+        var workDays = scheduleType.value === '2/2' ? 2 : 3;
+        var cycleLength = workDays * 2;
+
+        for (var day = startDay; day <= daysInMonth; day++) {
+            var diff = day - startDay;
+            if (diff % cycleLength < workDays) {
+                scheduledDays.add(day);
+            }
+        }
+
+        renderCalendar();
+        calculateSalary();
     }
-}
 
-.form-group {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
+    function renderCalendar() {
+        calendarGrid.innerHTML = '';
+        var parts = monthSelect.value.split('-');
+        var year = parseInt(parts.at(0), 10);
+        var month = parseInt(parts.at(1), 10);
+        var daysInMonth = new Date(year, month, 0).getDate();
 
-.rate-group {
-    max-width: 130px;
-}
+        var firstDayOfWeek = new Date(year, month - 1, 1).getDay();
+        if (firstDayOfWeek === 0) firstDayOfWeek = 7;
 
-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-}
+        for (var i = 1; i < firstDayOfWeek; i++) {
+            var emptyCell = document.createElement('div');
+            emptyCell.className = 'calendar-day empty';
+            calendarGrid.appendChild(emptyCell);
+        }
 
-select, input[type="number"], input[type="month"] {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 14px;
-    color: var(--text-main);
-    background-color: #fff;
-}
+        for (var day = 1; day <= daysInMonth; day++) {
+            (function (currentDay) {
+                var dayCell = document.createElement('div');
+                dayCell.className = 'calendar-day';
 
-select:focus, input:focus {
-    outline: none;
-    border-color: var(--primary);
-}
+                var numSpan = document.createElement('span');
+                numSpan.textContent = currentDay;
+                dayCell.appendChild(numSpan);
 
-.days-off-box {
-    background-color: #f9fafb;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 16px;
-}
+                if (isHoliday(month, currentDay)) {
+                    dayCell.classList.add('holiday');
+                    var holBadge = document.createElement('span');
+                    holBadge.className = 'day-tag tag-holiday';
+                    holBadge.textContent = '×2';
+                    holBadge.title = 'Праздничный день (двойная оплата)';
+                    dayCell.appendChild(holBadge);
+                }
 
-.divider-line {
-    height: 1px;
-    background-color: var(--border-color);
-    margin: 10px 0;
-}
+                var isScheduled = scheduledDays.has(currentDay);
+                var isSkipped = skippedDays.has(currentDay);
+                var isExtra = extraDays.has(currentDay);
+                var isWorked = (isScheduled && !isSkipped) || isExtra;
 
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 0;
-    color: var(--text-main);
-    font-weight: 500;
-    cursor: pointer;
-}
+                if (isWorked) {
+                    dayCell.classList.add('active');
+                    dayCell.classList.add(currentDay <= 15 ? 'half-1' : 'half-2');
 
-.checkbox-label input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--primary);
-    cursor: pointer;
-}
+                    if (shortDays.has(currentDay)) {
+                        var shortBadge = document.createElement('span');
+                        shortBadge.className = 'day-tag tag-short';
+                        shortBadge.textContent = '6ч';
+                        shortBadge.title = 'Смена 6 часов (50% ставки)';
+                        dayCell.appendChild(shortBadge);
+                    }
+                } else if (isScheduled && isSkipped) {
+                    dayCell.classList.add('day-off');
+                    dayCell.title = 'Выходной в рабочую смену';
+                }
 
-.hint-small {
-    font-size: 12px;
-    color: var(--off-color);
-    margin-top: 6px;
-}
+                dayCell.addEventListener('click', function () {
+                    var currentlyWorked = (scheduledDays.has(currentDay) && !skippedDays.has(currentDay)) || extraDays.has(currentDay);
 
-.hint-purple {
-    color: var(--short-color);
-    font-weight: 500;
-}
+                    if (halfShiftMode.checked) {
+                        if (!currentlyWorked) {
+                            if (scheduledDays.has(currentDay)) {
+                                skippedDays.delete(currentDay);
+                            } else {
+                                extraDays.add(currentDay);
+                            }
+                            shortDays.add(currentDay);
+                        } else {
+                            if (shortDays.has(currentDay)) {
+                                shortDays.delete(currentDay);
+                            } else {
+                                shortDays.add(currentDay);
+                            }
+                        }
+                    } else {
+                        if (scheduledDays.has(currentDay)) {
+                            if (skippedDays.has(currentDay)) {
+                                skippedDays.delete(currentDay);
+                            } else {
+                                skippedDays.add(currentDay);
+                                shortDays.delete(currentDay);
+                                hadDaysOff.checked = true;
+                                daysOffHint.style.display = 'block';
+                            }
+                        } else {
+                            if (extraDays.has(currentDay)) {
+                                extraDays.delete(currentDay);
+                                shortDays.delete(currentDay);
+                            } else {
+                                extraDays.add(currentDay);
+                            }
+                        }
+                    }
 
-.btn-link {
-    background: none;
-    border: none;
-    color: var(--primary);
-    font-size: 13px;
-    cursor: pointer;
-    text-decoration: underline;
-}
+                    renderCalendar();
+                    calculateSalary();
+                });
 
-.weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-}
+                calendarGrid.appendChild(dayCell);
+            })(day);
+        }
+    }
 
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-}
+    function addSubRow() {
+        var row = document.createElement('div');
+        row.className = 'sub-row';
 
-.calendar-day {
-    position: relative;
-    min-height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    user-select: none;
-    transition: 0.15s;
-    background-color: #fff;
-}
+        var select = document.createElement('select');
+        select.className = 'sub-pvz';
+        pvzList.forEach(function (pvz, idx) {
+            var opt = document.createElement('option');
+            opt.value = idx;
+            opt.textContent = pvz.name;
+            select.appendChild(opt);
+        });
 
-.calendar-day:hover:not(.empty) {
-    border-color: var(--primary);
-}
+        var inputH1 = document.createElement('input');
+        inputH1.type = 'number';
+        inputH1.min = '0';
+        inputH1.step = '0.5';
+        inputH1.placeholder = '0';
+        inputH1.className = 'sub-h1';
 
-.calendar-day.empty {
-    border: none;
-    background: transparent;
-    cursor: default;
-}
+        var inputH2 = document.createElement('input');
+        inputH2.type = 'number';
+        inputH2.min = '0';
+        inputH2.step = '0.5';
+        inputH2.placeholder = '0';
+        inputH2.className = 'sub-h2';
 
-.calendar-day.holiday:not(.active) {
-    border: 1.5px solid #f59e0b;
-    background-color: #fffbeb;
-    color: var(--holiday-color);
-}
+        var delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'btn-del';
+        delBtn.innerHTML = '&times;';
+        delBtn.title = 'Удалить';
 
-.calendar-day.active.half-1 {
-    background-color: var(--half1-bg);
-    border: 1.5px solid var(--half1-color);
-    color: var(--half1-color);
-}
+        row.appendChild(select);
+        row.appendChild(inputH1);
+        row.appendChild(inputH2);
+        row.appendChild(delBtn);
 
-.calendar-day.active.half-2 {
-    background-color: var(--half2-bg);
-    border: 1.5px solid var(--half2-color);
-    color: var(--half2-color);
-}
+        select.addEventListener('change', calculateSalary);
+        inputH1.addEventListener('input', calculateSalary);
+        inputH2.addEventListener('input', calculateSalary);
+        delBtn.addEventListener('click', function () {
+            row.remove();
+            calculateSalary();
+        });
 
-.calendar-day.day-off {
-    background-color: var(--off-bg);
-    border: 1.5px solid var(--off-color);
-    color: var(--off-color);
-    text-decoration: line-through;
-}
+        subsList.appendChild(row);
+    }
 
-.day-tag {
-    position: absolute;
-    font-size: 10px;
-    font-weight: 800;
-    line-height: 1;
-    padding: 2px 4px;
-    border-radius: 4px;
-}
+    function calculateSalary() {
+        var baseRate = parseFloat(baseRateInput.value) || 0;
 
-.tag-holiday {
-    top: 3px;
-    right: 3px;
-    background-color: var(--holiday-bg);
-    color: var(--holiday-color);
-    border: 1px solid #f59e0b;
+        document.getElementById('rateSummary').innerHTML =
+            '<span>Обычная смена: <b>' + baseRate.toLocaleString('ru-RU') + ' ₽</b></span>' +
+            '<span>6ч: <b>' + (baseRate * 0.5).toLocaleString('ru-RU') + ' ₽</b> • Праздник ×2: <b>' + (baseRate * 2).toLocaleString('ru-RU') + ' ₽</b></span>';
+var parts = monthSelect.value.split('-');
+var year = parseInt(parts.at(0), 10);
+var month = parseInt(parts.at(1), 10);
+var daysInMonth = new Date(year, month, 0).getDate();
+var mainShiftsH1 = 0;
+var mainShiftsH2 = 0;
+var mainPayH1 = 0;
+var mainPayH2 = 0;
+var holidayNotesH1 = [];
+var holidayNotesH2 = [];
+var shortNotesH1 = [];
+var shortNotesH2 = [];
+for (var day = 1; day <= daysInMonth; day++) {
+var worked = (scheduledDays.has(day) && !skippedDays.has(day)) || extraDays.has(day);
+if (worked) {
+var isShort = shortDays.has(day);
+var isHol = isHoliday(month, day);
+var shiftWeight = isShort ? 0.5 : 1;
+var rateMultiplier = isHol ? 2 : 1;
+var dayPay = baseRate * shiftWeight * rateMultiplier;
+if (day <= 15) {
+mainShiftsH1 += shiftWeight;
+mainPayH1 += dayPay;
+if (isHol) holidayNotesH1.push(day + ' числа (' + dayPay.toLocaleString('ru-RU') + ' ₽)');
+if (isShort) shortNotesH1.push(day + ' числа (' + dayPay.toLocaleString('ru-RU') + ' ₽)');
+} else {
+mainShiftsH2 += shiftWeight;
+mainPayH2 += dayPay;
+if (isHol) holidayNotesH2.push(day + ' числа (' + dayPay.toLocaleString('ru-RU') + ' ₽)');
+if (isShort) shortNotesH2.push(day + ' числа (' + dayPay.toLocaleString('ru-RU') + ' ₽)');
 }
-
-.tag-short {
-    bottom: 3px;
-    left: 3px;
-    background-color: var(--short-bg);
-    color: var(--short-color);
-    border: 1px solid #8b5cf6;
 }
-
-.legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 14px;
-    font-size: 12px;
-    color: var(--text-muted);
 }
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
+var subShiftsH1 = 0;
+var subShiftsH2 = 0;
+var subPayH1 = 0;
+var subPayH2 = 0;
+if (enableSubs.checked) {
+var subRows = document.querySelectorAll('.sub-row');
+subRows.forEach(function (row) {
+var pvzIndex = parseInt(row.querySelector('.sub-pvz').value, 10);
+var subRate = pvzList.at(pvzIndex).rate + 100;
+var countH1 = parseFloat(row.querySelector('.sub-h1').value) || 0;
+var countH2 = parseFloat(row.querySelector('.sub-h2').value) || 0;
+subShiftsH1 += countH1;
+subShiftsH2 += countH2;
+subPayH1 += countH1 * subRate;
+subPayH2 += countH2 * subRate;
+});
 }
-
-.dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    display: inline-block;
+var totalH1 = mainPayH1 + subPayH1;
+var totalH2 = mainPayH2 + subPayH2;
+var totalMonth = totalH1 + totalH2;
+var extraTextH1 = [];
+if (holidayNotesH1.length > 0) extraTextH1.push('Праздники ×2: ' + holidayNotesH1.join(', '));
+if (shortNotesH1.length > 0) extraTextH1.push('По 6ч (50%): ' + shortNotesH1.join(', '));
+var extraTextH2 = [];
+if (holidayNotesH2.length > 0) extraTextH2.push('Праздники ×2: ' + holidayNotesH2.join(', '));
+if (shortNotesH2.length > 0) extraTextH2.push('По 6ч (50%): ' + shortNotesH2.join(', '));
+document.getElementById('shiftsHalf1').textContent = (mainShiftsH1 + subShiftsH1) + ' смен';
+document.getElementById('detailsHalf1').textContent = 'Основных: ' + mainPayH1.toLocaleString('ru-RU') + ' ₽ | Подмен: ' + subPayH1.toLocaleString('ru-RU') + ' ₽';
+document.getElementById('extraHalf1').textContent = extraTextH1.join(' • ');
+document.getElementById('sumHalf1').textContent = totalH1.toLocaleString('ru-RU') + ' ₽';
+document.getElementById('shiftsHalf2').textContent = (mainShiftsH2 + subShiftsH2) + ' смен';
+document.getElementById('detailsHalf2').textContent = 'Основных: ' + mainPayH2.toLocaleString('ru-RU') + ' ₽ | Подмен: ' + subPayH2.toLocaleString('ru-RU') + ' ₽';
+document.getElementById('extraHalf2').textContent = extraTextH2.join(' • ');
+document.getElementById('sumHalf2').textContent = totalH2.toLocaleString('ru-RU') + ' ₽';
+var allShifts = mainShiftsH1 + mainShiftsH2 + subShiftsH1 + subShiftsH2;
+document.getElementById('totalShifts').textContent = 'Всего отработано: ' + allShifts + ' смен';
+document.getElementById('totalSum').textContent = totalMonth.toLocaleString('ru-RU') + ' ₽';
 }
-
-.dot.half-1 { background-color: var(--half1-color); }
-.dot.half-2 { background-color: var(--half2-color); }
-.dot.day-off { background-color: var(--off-color); }
-
-.badge-mini {
-    font-size: 10px;
-    font-weight: 800;
-    padding: 1px 4px;
-    border-radius: 4px;
+pvzSelect.addEventListener('change', function (e) {
+var idx = parseInt(e.target.value, 10);
+baseRateInput.value = pvzList.at(idx).rate;
+calculateSalary();
+});
+baseRateInput.addEventListener('input', calculateSalary);
+monthSelect.addEventListener('change', generateSchedule);
+firstShiftDay.addEventListener('input', generateSchedule);
+scheduleType.addEventListener('change', generateSchedule);
+hadDaysOff.addEventListener('change', function (e) {
+daysOffHint.style.display = e.target.checked ? 'block' : 'none';
+if (e.target.checked) {
+halfShiftMode.checked = false;
+halfShiftHint.style.display = 'none';
+} else {
+skippedDays.clear();
+renderCalendar();
+calculateSalary();
 }
-
-.holiday-mini {
-    background-color: var(--holiday-bg);
-    color: var(--holiday-color);
-    border: 1px solid #f59e0b;
+});
+halfShiftMode.addEventListener('change', function (e) {
+halfShiftHint.style.display = e.target.checked ? 'block' : 'none';
+if (e.target.checked) {
+daysOffHint.style.display = 'none';
+} else {
+shortDays.clear();
+renderCalendar();
+calculateSalary();
 }
-
-.half-mini {
-    background-color: var(--short-bg);
-    color: var(--short-color);
-    border: 1px solid #8b5cf6;
+});
+resetScheduleBtn.addEventListener('click', function () {
+hadDaysOff.checked = false;
+daysOffHint.style.display = 'none';
+halfShiftMode.checked = false;
+halfShiftHint.style.display = 'none';
+generateSchedule();
+});
+enableSubs.addEventListener('change', function (e) {
+subsSection.style.display = e.target.checked ? 'block' : 'none';
+if (e.target.checked && subsList.children.length === 0) {
+addSubRow();
 }
-
-.toggle-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.toggle-header h2 {
-    margin-bottom: 2px;
-}
-
-.optional-tag {
-    font-size: 12px;
-    color: var(--text-muted);
-    background: #f3f4f6;
-    padding: 2px 8px;
-    border-radius: 6px;
-}
-
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-    flex-shrink: 0;
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #cbd5e1;
-    transition: .3s;
-    border-radius: 24px;
-}
-
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: .3s;
-    border-radius: 50%;
-}
-
-input:checked + .slider {
-    background-color: var(--primary);
-}
-
-input:checked + .slider:before {
-    transform: translateX(20px);
-}
-
-.subs-section {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-color);
-}
-
-.hint {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-}
-
-.sub-headers {
-    display: grid;
-    grid-template-columns: 2fr 0.7fr 0.7fr 28px;
-    gap: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-}
-
-.subs-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.sub-row {
-    display: grid;
-    grid-template-columns: 2fr 0.7fr 0.7fr 28px;
-    gap: 8px;
-    align-items: center;
-}
-
-.btn-secondary {
-    background-color: #f3f4f6;
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.btn-secondary:hover {
-    background-color: #e5e7eb;
-}
-
-.btn-del {
-    background: none;
-    border: none;
-    color: var(--off-color);
-    font-size: 20px;
-    cursor: pointer;
-    line-height: 1;
-}
-
-.rate-banner {
-    background-color: #eef2ff;
-    border: 1px solid #c7d2fe;
-    color: #3730a3;
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 14px;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.result-block {
-    padding: 14px;
-    border-radius: 10px;
-    background-color: #f8fafc;
-    border: 1px solid var(--border-color);
-    margin-bottom: 12px;
-}
-
-.result-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 4px;
-}
-
-.badge {
-    background-color: #e2e8f0;
-    color: #334155;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-}
-
-.result-details {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-}
-
-.result-extra {
-    font-size: 12px;
-    color: var(--primary);
-    font-weight: 500;
-    margin-bottom: 6px;
-    line-height: 1.4;
-}
-
-.result-sum {
-    font-size: 20px;
-    font-weight: 700;
-}
-
-.total-block {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 2px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.total-label {
-    font-size: 16px;
-    font-weight: 700;
-}
-
-.total-shifts {
-    font-size: 13px;
-    color: var(--text-muted);
-}
-
-.total-sum {
-    font-size: 26px;
-    font-weight: 800;
-    color: var(--primary);
-}
+calculateSalary();
+});
+addSubBtn.addEventListener('click', addSubRow);
+init();
+});
