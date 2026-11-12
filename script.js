@@ -47,6 +47,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var subsList = document.getElementById('subsList');
     var addSubBtn = document.getElementById('addSubBtn');
 
+    function getPvzByIndex(idx) {
+        return pvzList.slice(idx, idx + 1).pop() || pvzList.slice(0, 1).pop();
+    }
+
     function isHoliday(month, day) {
         return Object.prototype.hasOwnProperty.call(holidaysMap, month + '-' + day);
     }
@@ -64,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var month = String(now.getMonth() + 1).padStart(2, '0');
         monthSelect.value = year + '-' + month;
 
-        baseRateInput.value = pvzList.at(0).rate;
+        baseRateInput.value = getPvzByIndex(0).rate;
 
         generateSchedule();
     }
@@ -78,8 +82,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!monthSelect.value) return;
 
         var parts = monthSelect.value.split('-');
-        var year = parseInt(parts.at(0), 10);
-        var month = parseInt(parts.at(1), 10);
+        var year = parseInt(parts.slice(0, 1).pop(), 10);
+        var month = parseInt(parts.slice(1, 2).pop(), 10);
         var daysInMonth = new Date(year, month, 0).getDate();
 
         var startDay = parseInt(firstShiftDay.value, 10) || 1;
@@ -103,8 +107,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderCalendar() {
         calendarGrid.innerHTML = '';
         var parts = monthSelect.value.split('-');
-        var year = parseInt(parts.at(0), 10);
-        var month = parseInt(parts.at(1), 10);
+        var year = parseInt(parts.slice(0, 1).pop(), 10);
+        var month = parseInt(parts.slice(1, 2).pop(), 10);
         var daysInMonth = new Date(year, month, 0).getDate();
 
         var firstDayOfWeek = new Date(year, month - 1, 1).getDay();
@@ -254,12 +258,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function calculateSalary() {
         var baseRate = parseFloat(baseRateInput.value) || 0;
 
-        document.getElementById('rateSummary').innerHTML =
-            '<span>Обычная смена: <b>' + baseRate.toLocaleString('ru-RU') + ' ₽</b></span>' +
-            '<span>6ч: <b>' + (baseRate * 0.5).toLocaleString('ru-RU') + ' ₽</b> • Праздник ×2: <b>' + (baseRate * 2).toLocaleString('ru-RU') + ' ₽</b></span>';
+        document.getElementById('rateSummary').innerHTML ='Обычная смена: ' + baseRate.toLocaleString('ru-RU') + ' ₽' +
+'6ч: ' + (baseRate * 0.5).toLocaleString('ru-RU') + ' ₽ • Праздник ×2: ' + (baseRate * 2).toLocaleString('ru-RU') + ' ₽';
 var parts = monthSelect.value.split('-');
-var year = parseInt(parts.at(0), 10);
-var month = parseInt(parts.at(1), 10);
+var year = parseInt(parts.slice(0, 1).pop(), 10);
+var month = parseInt(parts.slice(1, 2).pop(), 10);
 var daysInMonth = new Date(year, month, 0).getDate();
 var mainShiftsH1 = 0;
 var mainShiftsH2 = 0;
@@ -298,7 +301,7 @@ if (enableSubs.checked) {
 var subRows = document.querySelectorAll('.sub-row');
 subRows.forEach(function (row) {
 var pvzIndex = parseInt(row.querySelector('.sub-pvz').value, 10);
-var subRate = pvzList.at(pvzIndex).rate + 100;
+var subRate = getPvzByIndex(pvzIndex).rate + 100;
 var countH1 = parseFloat(row.querySelector('.sub-h1').value) || 0;
 var countH2 = parseFloat(row.querySelector('.sub-h2').value) || 0;
 subShiftsH1 += countH1;
@@ -330,7 +333,7 @@ document.getElementById('totalSum').textContent = totalMonth.toLocaleString('ru-
 }
 pvzSelect.addEventListener('change', function (e) {
 var idx = parseInt(e.target.value, 10);
-baseRateInput.value = pvzList.at(idx).rate;
+baseRateInput.value = getPvzByIndex(idx).rate;
 calculateSalary();
 });
 baseRateInput.addEventListener('input', calculateSalary);
