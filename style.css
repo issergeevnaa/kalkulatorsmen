@@ -532,8 +532,12 @@ input:checked + .slider:before {
     color: var(--primary);
 }
 
+:root {
+    --primary: #005BFF;
+}
+
 .logo-wrapper {
     display: flex;
     justify-content: center;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
