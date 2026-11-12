@@ -5,16 +5,15 @@
     --text-muted: #6b7280;
     --border-color: #e5e7eb;
     --primary: #4f46e5;
-    --primary-hover: #4338ca;
     --half1-color: #2563eb;
     --half1-bg: #dbeafe;
     --half2-color: #059669;
     --half2-bg: #d1fae5;
     --off-color: #dc2626;
     --off-bg: #fee2e2;
-    --holiday-color: #d97706;
+    --holiday-color: #b45309;
     --holiday-bg: #fef3c7;
-    --short-color: #7c3aed;
+    --short-color: #6d28d9;
     --short-bg: #ede9fe;
 }
 
@@ -191,7 +190,6 @@ select:focus, input:focus {
     text-decoration: underline;
 }
 
-/* Календарь */
 .weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -210,17 +208,18 @@ select:focus, input:focus {
 
 .calendar-day {
     position: relative;
-    aspect-ratio: 1;
+    min-height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 8px;
     border: 1px solid var(--border-color);
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
     user-select: none;
     transition: 0.15s;
+    background-color: #fff;
 }
 
 .calendar-day:hover:not(.empty) {
@@ -229,58 +228,55 @@ select:focus, input:focus {
 
 .calendar-day.empty {
     border: none;
+    background: transparent;
     cursor: default;
 }
 
 .calendar-day.holiday:not(.active) {
-    border-color: #fcd34d;
+    border: 1.5px solid #f59e0b;
     background-color: #fffbeb;
     color: var(--holiday-color);
 }
 
 .calendar-day.active.half-1 {
     background-color: var(--half1-bg);
-    border-color: var(--half1-color);
+    border: 1.5px solid var(--half1-color);
     color: var(--half1-color);
-    font-weight: 700;
 }
 
 .calendar-day.active.half-2 {
     background-color: var(--half2-bg);
-    border-color: var(--half2-color);
+    border: 1.5px solid var(--half2-color);
     color: var(--half2-color);
-    font-weight: 700;
 }
 
 .calendar-day.day-off {
     background-color: var(--off-bg);
-    border-color: var(--off-color);
+    border: 1.5px solid var(--off-color);
     color: var(--off-color);
     text-decoration: line-through;
-    font-weight: 600;
 }
 
-/* Метки на днях календаря */
 .day-tag {
     position: absolute;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 800;
     line-height: 1;
-    padding: 2px 3px;
+    padding: 2px 4px;
     border-radius: 4px;
 }
 
 .tag-holiday {
-    top: 2px;
-    right: 2px;
+    top: 3px;
+    right: 3px;
     background-color: var(--holiday-bg);
     color: var(--holiday-color);
     border: 1px solid #f59e0b;
 }
 
 .tag-short {
-    bottom: 2px;
-    left: 2px;
+    bottom: 3px;
+    left: 3px;
     background-color: var(--short-bg);
     color: var(--short-color);
     border: 1px solid #8b5cf6;
@@ -314,7 +310,7 @@ select:focus, input:focus {
 
 .badge-mini {
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 800;
     padding: 1px 4px;
     border-radius: 4px;
 }
@@ -331,7 +327,6 @@ select:focus, input:focus {
     border: 1px solid #8b5cf6;
 }
 
-/* Переключатель подмен */
 .toggle-header {
     display: flex;
     justify-content: space-between;
@@ -453,7 +448,21 @@ input:checked + .slider:before {
     line-height: 1;
 }
 
-/* Блок результатов */
+.rate-banner {
+    background-color: #eef2ff;
+    border: 1px solid #c7d2fe;
+    color: #3730a3;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .result-block {
     padding: 14px;
     border-radius: 10px;
@@ -486,8 +495,9 @@ input:checked + .slider:before {
 }
 
 .result-extra {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--primary);
+    font-weight: 500;
     margin-bottom: 6px;
     line-height: 1.4;
 }
@@ -521,4 +531,3 @@ input:checked + .slider:before {
     font-weight: 800;
     color: var(--primary);
 }
-Используйте код с осторожностью.
