@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Калькулятор зарплаты ПВЗ</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
     <div class="container">
@@ -14,6 +14,7 @@
         </header>
 
         <div class="main-grid">
+            <!-- Левая колонка: Настройки и календарь -->
             <div class="card">
                 <h2>1. Основной ПВЗ и график</h2>
                 
@@ -46,7 +47,6 @@
                     </div>
                 </div>
 
-                <!-- Блок уточнений: выходные и 6-часовые смены -->
                 <div class="days-off-box">
                     <div class="toggle-header">
                         <label for="hadDaysOff" class="checkbox-label">
@@ -68,7 +68,7 @@
                         </label>
                     </div>
                     <p id="halfShiftHint" class="hint-small hint-purple" style="display: none;">
-                        Режим выбора 6-часовых смен активен: кликните по нужным рабочим дням в календаре (появится метка «6ч»).
+                        Кликните по рабочим дням в календаре — на них появится метка «6ч», а оплата разделится пополам.
                     </p>
                 </div>
 
@@ -82,10 +82,11 @@
                     <span class="legend-item"><i class="dot half-2"></i> 16–31 число</span>
                     <span class="legend-item"><i class="dot day-off"></i> Выходной</span>
                     <span class="legend-item"><span class="badge-mini holiday-mini">×2</span> Праздник</span>
-                    <span class="legend-item"><span class="badge-mini half-mini">6ч</span> Полсмены</span>
+                    <span class="legend-item"><span class="badge-mini half-mini">6ч</span> Полсмены (50%)</span>
                 </div>
             </div>
 
+            <!-- Правая колонка: Подмены и Итоги -->
             <div class="right-column">
                 <div class="card">
                     <div class="toggle-header">
@@ -114,6 +115,11 @@
 
                 <div class="card result-card">
                     <h2>3. Расчет заработной платы</h2>
+
+                    <div class="rate-banner" id="rateSummary">
+                        <span>Обычная смена: <b>1 500 ₽</b></span>
+                        <span>6ч: <b>750 ₽</b> • Праздник ×2: <b>3 000 ₽</b></span>
+                    </div>
                     
                     <div class="result-block">
                         <div class="result-title">
@@ -147,6 +153,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=3"></script>
 </body>
 </html>
