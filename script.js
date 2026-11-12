@@ -32,19 +32,19 @@ document.addEventListener('DOMContentLoaded', function () {
     var addSubBtn = document.getElementById('addSubBtn');
 
     function init() {
-        for (var i = 0; i < pvzList.length; i++) {
+        pvzList.forEach(function (pvz, index) {
             var option = document.createElement('option');
-            option.value = i;
-            option.textContent = pvzList[i].name + ' (' + pvzList[i].rate + ' ₽)';
+            option.value = index;
+            option.textContent = pvz.name + ' (' + pvz.rate + ' ₽)';
             pvzSelect.appendChild(option);
-        }
+        });
 
         var now = new Date();
         var year = now.getFullYear();
         var month = String(now.getMonth() + 1).padStart(2, '0');
         monthSelect.value = year + '-' + month;
 
-        baseRateInput.value = pvzList[0].rate;
+        baseRateInput.value = pvzList.at(0).rate;
 
         generateSchedule();
     }
@@ -57,8 +57,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!monthSelect.value) return;
 
         var parts = monthSelect.value.split('-');
-        var year = parseInt(parts[0], 10);
-        var month = parseInt(parts[1], 10);
+        var year = parseInt(parts.at(0), 10);
+        var month = parseInt(parts.at(1), 10);
         var daysInMonth = new Date(year, month, 0).getDate();
 
         var startDay = parseInt(firstShiftDay.value, 10) || 1;
@@ -82,8 +82,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderCalendar() {
         calendarGrid.innerHTML = '';
         var parts = monthSelect.value.split('-');
-        var year = parseInt(parts[0], 10);
-        var month = parseInt(parts[1], 10);
+        var year = parseInt(parts.at(0), 10);
+        var month = parseInt(parts.at(1), 10);
         var daysInMonth = new Date(year, month, 0).getDate();
 
         var firstDayOfWeek = new Date(year, month - 1, 1).getDay();
@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     dayCell.classList.add('active');
                     dayCell.classList.add(currentDay <= 15 ? 'half-1' : 'half-2');
                 } else if (isScheduled && isSkipped) {
-                    dayCell.classList.add('day-off');
+                    dayCell.className = 'calendar-day day-off';
                     dayCell.title = 'Выходной в рабочую смену';
                 }
 
@@ -144,12 +144,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var select = document.createElement('select');
         select.className = 'sub-pvz';
-        for (var i = 0; i < pvzList.length; i++) {
+        pvzList.forEach(function (pvz, idx) {
             var opt = document.createElement('option');
-            opt.value = i;
-            opt.textContent = pvzList[i].name + ' (' + (pvzList[i].rate + 100) + ' ₽)';
+            opt.value = idx;
+            opt.textContent = pvz.name + ' (' + (pvz.rate + 100) + ' ₽)';
             select.appendChild(opt);
-        }
+        });
 
         var inputH1 = document.createElement('input');
         inputH1.type = 'number';
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var mainShiftsH2 = 0;
 
         var parts = monthSelect.value.split('-');
-        var daysInMonth = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10), 0).getDate();
+        var daysInMonth = new Date(parseInt(parts.at(0), 10), parseInt(parts.at(1), 10), 0).getDate();
 
         for (var day = 1; day <= daysInMonth; day++) {
             var worked = (scheduledDays.has(day) && !skippedDays.has(day)) || extraDays.has(day);
@@ -211,10 +211,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (enableSubs.checked) {
             var subRows = document.querySelectorAll('.sub-row');
-            for (var i = 0; i < subRows.length; i++) {
-                var row = subRows[i];
+            subRows.forEach(function (row) {
                 var pvzIndex = parseInt(row.querySelector('.sub-pvz').value, 10);
-                var subRate = pvzList[pvzIndex].rate + 100;
+                var subRate = pvzList.at(pvzIndex).rate + 100;
                 var countH1 = parseInt(row.querySelector('.sub-h1').value, 10) || 0;
                 var countH2 = parseInt(row.querySelector('.sub-h2').value, 10) || 0;
 
@@ -222,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 subShiftsH2 += countH2;
                 subPayH1 += countH1 * subRate;
                 subPayH2 += countH2 * subRate;
-            }
+            });
         }
 
         var totalH1 = mainPayH1 + subPayH1;
@@ -243,13 +242,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     pvzSelect.addEventListener('change', function (e) {
-        baseRateInput.value = pvzList[e.target.value].rate;
+        var idx = parseInt(e.target.value, 10);
+        baseRateInput.value = pvzList.at(idx).rate;
         calculateSalary();
     });
 
     baseRateInput.addEventListener('input', calculateSalary);
     monthSelect.addEventListener('change', generateSchedule);
     firstShiftDay.addEventListener('input', generateSchedule);
+Используйте код с осторожностью.
 scheduleType.addEventListener('change', generateSchedule);
 hadDaysOff.addEventListener('change', function (e) {
 daysOffHint.style.display = e.target.checked ? 'block' : 'none';
