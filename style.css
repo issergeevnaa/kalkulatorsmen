@@ -1,7 +1,7 @@
 :root {
-    --bg-color: #f4f6f9;
+    --bg-color: #f3f4f6;
     --card-bg: #ffffff;
-    --text-main: #1f2937;
+    --text-main: #111827;
     --text-muted: #6b7280;
     --border-color: #e5e7eb;
     --primary: #4f46e5;
@@ -10,7 +10,8 @@
     --half1-bg: #dbeafe;
     --half2-color: #059669;
     --half2-bg: #d1fae5;
-    --danger: #ef4444;
+    --off-color: #dc2626;
+    --off-bg: #fee2e2;
 }
 
 * {
@@ -28,35 +29,34 @@ body {
 }
 
 .container {
-    max-width: 1100px;
+    max-width: 1120px;
     margin: 0 auto;
 }
 
 header {
-    margin-bottom: 24px;
     text-align: center;
+    margin-bottom: 24px;
 }
 
 header h1 {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 700;
-    color: var(--text-main);
 }
 
 .subtitle {
     color: var(--text-muted);
-    font-size: 15px;
+    font-size: 14px;
     margin-top: 4px;
 }
 
 .main-grid {
     display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
+    grid-template-columns: 1.15fr 0.85fr;
     gap: 24px;
     align-items: start;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 880px) {
     .main-grid {
         grid-template-columns: 1fr;
     }
@@ -72,8 +72,8 @@ header h1 {
     background: var(--card-bg);
     border-radius: 12px;
     padding: 24px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .card h2 {
@@ -84,14 +84,23 @@ header h1 {
 
 .form-row {
     display: flex;
-    gap: 16px;
+    gap: 14px;
     margin-bottom: 16px;
 }
 
-@media (max-width: 500px) {
-    .form-row {
+.three-cols {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 540px) {
+    .form-row, .three-cols {
+        display: flex;
         flex-direction: column;
-        gap: 12px;
+    }
+    .rate-group {
+        max-width: 100%;
     }
 }
 
@@ -99,21 +108,10 @@ header h1 {
     flex: 1;
     display: flex;
     flex-direction: column;
-    margin-bottom: 12px;
-}
-
-.form-row .form-group {
-    margin-bottom: 0;
 }
 
 .rate-group {
-    max-width: 160px;
-}
-
-@media (max-width: 500px) {
-    .rate-group {
-        max-width: 100%;
-    }
+    max-width: 130px;
 }
 
 label {
@@ -131,7 +129,6 @@ select, input[type="number"], input[type="month"] {
     font-size: 14px;
     color: var(--text-main);
     background-color: #fff;
-    transition: border-color 0.2s;
 }
 
 select:focus, input:focus {
@@ -139,15 +136,35 @@ select:focus, input:focus {
     border-color: var(--primary);
 }
 
-/* Календарь */
-.calendar-header {
+.days-off-box {
+    background-color: #f9fafb;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.checkbox-label {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-top: 16px;
-    margin-bottom: 10px;
-    font-size: 14px;
+    gap: 8px;
+    margin-bottom: 0;
+    color: var(--text-main);
     font-weight: 500;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.hint-small {
+    font-size: 12px;
+    color: var(--off-color);
+    margin-top: 8px;
 }
 
 .btn-link {
@@ -186,12 +203,11 @@ select:focus, input:focus {
     font-weight: 500;
     cursor: pointer;
     user-select: none;
-    transition: all 0.15s ease;
+    transition: 0.15s;
 }
 
 .calendar-day:hover:not(.empty) {
     border-color: var(--primary);
-    background-color: #f9fafb;
 }
 
 .calendar-day.empty {
@@ -213,9 +229,18 @@ select:focus, input:focus {
     font-weight: 700;
 }
 
+.calendar-day.day-off {
+    background-color: var(--off-bg);
+    border-color: var(--off-color);
+    color: var(--off-color);
+    text-decoration: line-through;
+    font-weight: 600;
+}
+
 .legend {
     display: flex;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: 14px;
     margin-top: 14px;
     font-size: 12px;
     color: var(--text-muted);
@@ -236,8 +261,8 @@ select:focus, input:focus {
 
 .dot.half-1 { background-color: var(--half1-color); }
 .dot.half-2 { background-color: var(--half2-color); }
+.dot.day-off { background-color: var(--off-color); }
 
-/* Переключатель подмен */
 .toggle-header {
     display: flex;
     justify-content: space-between;
@@ -245,7 +270,15 @@ select:focus, input:focus {
 }
 
 .toggle-header h2 {
-    margin-bottom: 0;
+    margin-bottom: 2px;
+}
+
+.optional-tag {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: #f3f4f6;
+    padding: 2px 8px;
+    border-radius: 6px;
 }
 
 .switch {
@@ -253,6 +286,7 @@ select:focus, input:focus {
     display: inline-block;
     width: 44px;
     height: 24px;
+    flex-shrink: 0;
 }
 
 .switch input {
@@ -302,16 +336,26 @@ input:checked + .slider:before {
     margin-bottom: 12px;
 }
 
+.sub-headers {
+    display: grid;
+    grid-template-columns: 2fr 0.7fr 0.7fr 28px;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
 .subs-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 12px;
 }
 
 .sub-row {
     display: grid;
-    grid-template-columns: 1.8fr 0.8fr 0.8fr 32px;
+    grid-template-columns: 2fr 0.7fr 0.7fr 28px;
     gap: 8px;
     align-items: center;
 }
@@ -325,7 +369,6 @@ input:checked + .slider:before {
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s;
 }
 
 .btn-secondary:hover {
@@ -335,13 +378,12 @@ input:checked + .slider:before {
 .btn-del {
     background: none;
     border: none;
-    color: var(--danger);
+    color: var(--off-color);
     font-size: 20px;
     cursor: pointer;
     line-height: 1;
 }
 
-/* Блок результатов */
 .result-block {
     padding: 14px;
     border-radius: 10px;
@@ -370,13 +412,12 @@ input:checked + .slider:before {
 .result-details {
     font-size: 12px;
     color: var(--text-muted);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .result-sum {
     font-size: 20px;
     font-weight: 700;
-    color: var(--text-main);
 }
 
 .total-block {
@@ -402,3 +443,4 @@ input:checked + .slider:before {
     font-size: 26px;
     font-weight: 800;
     color: var(--primary);
+}
