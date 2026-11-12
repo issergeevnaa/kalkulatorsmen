@@ -1,131 +1,409 @@
-const [year, month] = monthSelect.value.split('-').map(Number);
-const daysInMonth = new Date(year, month, 0).getDate();
-const startDay = Math.max(1, Math.min(daysInMonth, parseInt(firstShiftDay.value) || 1));
-const workDays = type === '2/2' ? 2 : 3;
-const cycleLength = workDays * 2;
-for (let day = startDay; day <= daysInMonth; day++) {
-const diff = day - startDay;
-if (diff % cycleLength < workDays) {
-selectedDays.add(day);
-}
-}
-renderCalendar();
-calculateSalary();
-}
-// Добавление строки подмены
-function addSubRow() {
-const row = document.createElement('div');
-row.className = 'sub-row';
-const select = document.createElement('select');
-select.className = 'sub-pvz';
-pvzList.forEach((pvz, idx) => {
-const opt = document.createElement('option');
-opt.value = idx;
-opt.textContent = ${pvz.name} (${pvz.rate + 100} ₽);
-select.appendChild(opt);
-});
-const inputH1 = document.createElement('input');
-inputH1.type = 'number';
-inputH1.min = '0';
-inputH1.placeholder = '1–15 (шт)';
-inputH1.title = 'Количество подмен с 1 по 15 число';
-inputH1.className = 'sub-h1';
-const inputH2 = document.createElement('input');
-inputH2.type = 'number';
-inputH2.min = '0';
-inputH2.placeholder = '16–31 (шт)';
-inputH2.title = 'Количество подмен с 16 по 31 число';
-inputH2.className = 'sub-h2';
-const delBtn = document.createElement('button');
-delBtn.type = 'button';
-delBtn.className = 'btn-del';
-delBtn.innerHTML = '×';
-delBtn.title = 'Удалить строку';
-row.appendChild(select);
-row.appendChild(inputH1);
-row.appendChild(inputH2);
-row.appendChild(delBtn);
-select.addEventListener('change', calculateSalary);
-inputH1.addEventListener('input', calculateSalary);
-inputH2.addEventListener('input', calculateSalary);
-delBtn.addEventListener('click', () => {
-row.remove();
-calculateSalary();
-});
-subsList.appendChild(row);
-}
-// Основной расчет зарплаты
-function calculateSalary() {
-const baseRate = parseFloat(baseRateInput.value) || 0;
-let mainShiftsH1 = 0;
-let mainShiftsH2 = 0;
-selectedDays.forEach(day => {
-if (day <= 15) mainShiftsH1++;
-else mainShiftsH2++;
-});
-const mainPayH1 = mainShiftsH1 * baseRate;
-const mainPayH2 = mainShiftsH2 * baseRate;
-let subShiftsH1 = 0;
-let subShiftsH2 = 0;
-let subPayH1 = 0;
-let subPayH2 = 0;
-if (enableSubs.checked) {
-const subRows = document.querySelectorAll('.sub-row');
-subRows.forEach(row => {
-const pvzIndex = row.querySelector('.sub-pvz').value;
-const subRate = pvzList[pvzIndex].rate + 100;
-const countH1 = parseInt(row.querySelector('.sub-h1').value) || 0;
-const countH2 = parseInt(row.querySelector('.sub-h2').value) || 0;
-subShiftsH1 += countH1;
-subShiftsH2 += countH2;
-subPayH1 += countH1 * subRate;
-subPayH2 += countH2 * subRate;
-});
-}
-const totalH1 = mainPayH1 + subPayH1;
-const totalH2 = mainPayH2 + subPayH2;
-const totalMonth = totalH1 + totalH2;
-// Обновление интерфейса
-document.getElementById('shiftsHalf1').textContent = ${mainShiftsH1 + subShiftsH1} смен;
-document.getElementById('detailsHalf1').textContent = Основных: ${mainPayH1.toLocaleString('ru-RU')} ₽ | Подмен: ${subPayH1.toLocaleString('ru-RU')} ₽;
-document.getElementById('sumHalf1').textContent = ${totalH1.toLocaleString('ru-RU')} ₽;
-document.getElementById('shiftsHalf2').textContent = ${mainShiftsH2 + subShiftsH2} смен;
-document.getElementById('detailsHalf2').textContent = Основных: ${mainPayH2.toLocaleString('ru-RU')} ₽ | Подмен: ${subPayH2.toLocaleString('ru-RU')} ₽;
-document.getElementById('sumHalf2').textContent = ${totalH2.toLocaleString('ru-RU')} ₽;
-const allShifts = mainShiftsH1 + mainShiftsH2 + subShiftsH1 + subShiftsH2;
-document.getElementById('totalShifts').textContent = Всего: ${allShifts} смен;
-document.getElementById('totalSum').textContent = ${totalMonth.toLocaleString('ru-RU')} ₽;
-}
-// Слушатели событий
-pvzSelect.addEventListener('change', (e) => {
-baseRateInput.value = pvzList[e.target.value].rate;
-calculateSalary();
-});
-baseRateInput.addEventListener('input', calculateSalary);
-monthSelect.addEventListener('change', () => {
-selectedDays.clear();
-if (scheduleType.value !== 'custom') {
-applySchedulePattern();
-} else {
-renderCalendar();
-calculateSalary();
-}
-});
-scheduleType.addEventListener('change', applySchedulePattern);
-firstShiftDay.addEventListener('input', applySchedulePattern);
-clearCalendarBtn.addEventListener('click', () => {
-selectedDays.clear();
-scheduleType.value = 'custom';
-startDateContainer.style.display = 'none';
-renderCalendar();
-calculateSalary();
-});
-enableSubs.addEventListener('change', (e) => {
-subsSection.style.display = e.target.checked ? 'block' : 'none';
-if (e.target.checked && subsList.children.length === 0) {
-addSubRow();
-}
-calculateSalary();
-});
-addSubBtn.addEventListener('click', addSubRow);
-init();
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор зарплаты ПВЗ</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --half1-color: #2563eb;
+            --half1-bg: #dbeafe;
+            --half2-color: #059669;
+            --half2-bg: #d1fae5;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-top: 4px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 860px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-color);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 500px) {
+            .form-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+
+        .form-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 12px;
+        }
+
+        .form-row .form-group {
+            margin-bottom: 0;
+        }
+
+        .rate-group {
+            max-width: 160px;
+        }
+
+        @media (max-width: 500px) {
+            .rate-group {
+                max-width: 100%;
+            }
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        select, input[type="number"], input[type="month"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-main);
+            background-color: #fff;
+            transition: border-color 0.2s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+
+        .calendar-day:hover:not(.empty) {
+            border-color: var(--primary);
+            background-color: #f9fafb;
+        }
+
+        .calendar-day.empty {
+            border: none;
+            cursor: default;
+        }
+
+        .calendar-day.active.half-1 {
+            background-color: var(--half1-bg);
+            border-color: var(--half1-color);
+            color: var(--half1-color);
+            font-weight: 700;
+        }
+
+        .calendar-day.active.half-2 {
+            background-color: var(--half2-bg);
+            border-color: var(--half2-color);
+            color: var(--half2-color);
+            font-weight: 700;
+        }
+
+        .legend {
+            display: flex;
+            gap: 16px;
+            margin-top: 14px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot.half-1 { background-color: var(--half1-color); }
+        .dot.half-2 { background-color: var(--half2-color); }
+
+        .toggle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .toggle-header h2 {
+            margin-bottom: 0;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .subs-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .hint {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .subs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .sub-row {
+            display: grid;
+            grid-template-columns: 1.8fr 0.8fr 0.8fr 32px;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-secondary {
+            background-color: #f3f4f6;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e5e7eb;
+        }
+
+        .btn-del {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .result-block {
+            padding: 14px;
+            border-radius: 10px;
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            margin-bottom: 12px;
+        }
+
+        .result-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .badge {
+            background-color: #e2e8f0;
+            color: #334155;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .result-details {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .result-sum {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .total-block {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-label {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .total-shifts {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .total-sum {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary);
+        }
