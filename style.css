@@ -531,3 +531,9 @@ input:checked + .slider:before {
     font-weight: 800;
     color: var(--primary);
 }
+
+.logo-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+}
