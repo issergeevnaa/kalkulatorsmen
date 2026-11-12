@@ -10,7 +10,7 @@
     <div class="container">
         <header>
             <h1>Калькулятор зарплаты ПВЗ</h1>
-            <p class="subtitle">Расчет смен и выплат за 1-ю (1–15) и 2-ю (16–30/31) половины месяца</p>
+            <p class="subtitle">Расчет смен с учетом праздников (×2), смен по 6 часов и подмен</p>
         </header>
 
         <div class="main-grid">
@@ -46,16 +46,29 @@
                     </div>
                 </div>
 
+                <!-- Блок уточнений: выходные и 6-часовые смены -->
                 <div class="days-off-box">
                     <div class="toggle-header">
                         <label for="hadDaysOff" class="checkbox-label">
                             <input type="checkbox" id="hadDaysOff">
-                            <span>У меня были выходные (отгулы) в мои смены</span>
+                            <span>Были выходные (отгулы) в мои смены</span>
                         </label>
                         <button type="button" id="resetScheduleBtn" class="btn-link">Сбросить</button>
                     </div>
                     <p id="daysOffHint" class="hint-small" style="display: none;">
-                        Нажмите на рабочую смену в календаре ниже, чтобы отметить её как выходной (она станет красной и не учтется в ЗП).
+                        Нажмите на рабочую смену в календаре, чтобы отметить её как выходной (станет красной).
+                    </p>
+
+                    <div class="divider-line"></div>
+
+                    <div class="toggle-header">
+                        <label for="halfShiftMode" class="checkbox-label">
+                            <input type="checkbox" id="halfShiftMode">
+                            <span>Были смены по 6 часов (оплата 50%)</span>
+                        </label>
+                    </div>
+                    <p id="halfShiftHint" class="hint-small hint-purple" style="display: none;">
+                        Режим выбора 6-часовых смен активен: кликните по нужным рабочим дням в календаре (появится метка «6ч»).
                     </p>
                 </div>
 
@@ -65,9 +78,11 @@
                 <div id="calendarGrid" class="calendar-grid"></div>
                 
                 <div class="legend">
-                    <span class="legend-item"><i class="dot half-1"></i> Смена (1–15)</span>
-                    <span class="legend-item"><i class="dot half-2"></i> Смена (16–31)</span>
-                    <span class="legend-item"><i class="dot day-off"></i> Выходной по графику</span>
+                    <span class="legend-item"><i class="dot half-1"></i> 1–15 число</span>
+                    <span class="legend-item"><i class="dot half-2"></i> 16–31 число</span>
+                    <span class="legend-item"><i class="dot day-off"></i> Выходной</span>
+                    <span class="legend-item"><span class="badge-mini holiday-mini">×2</span> Праздник</span>
+                    <span class="legend-item"><span class="badge-mini half-mini">6ч</span> Полсмены</span>
                 </div>
             </div>
 
@@ -106,6 +121,7 @@
                             <span class="badge" id="shiftsHalf1">0 смен</span>
                         </div>
                         <div class="result-details" id="detailsHalf1">Основных: 0 ₽ | Подмен: 0 ₽</div>
+                        <div class="result-extra" id="extraHalf1"></div>
                         <div class="result-sum" id="sumHalf1">0 ₽</div>
                     </div>
 
@@ -115,6 +131,7 @@
                             <span class="badge" id="shiftsHalf2">0 смен</span>
                         </div>
                         <div class="result-details" id="detailsHalf2">Основных: 0 ₽ | Подмен: 0 ₽</div>
+                        <div class="result-extra" id="extraHalf2"></div>
                         <div class="result-sum" id="sumHalf2">0 ₽</div>
                     </div>
 
